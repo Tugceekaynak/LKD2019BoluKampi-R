@@ -1,0 +1,316 @@
+---
+title: "Pokemon Analysis"
+author: "Tugce Kaynak"
+date: "02 08 2019"
+output: html_document
+---
+
+KAYNAK : https://www.kaggle.com/alopez247/pokemon/downloads/pokemon.zip/2
+
+## Veri Açýklamasý:
+
+### Pokemon Nedir?
+
+    Pokémon, kendi dünyasýnda yaþayan hayali hayvan benzeri canavarlardýr. Pokémon
+    birbirleriyle kavga etmek gibi huylarý vardýr. Genellikle (insan) eðitmenlerinin emirlerine göre kavga ederler. 
+
+* Þimdi veri kümesinin 23 sütununu inceleyelim. 
+* Ýlk ikisi, Pokémon’un benzersiz tanýmlayýcýlarý
+* 21 deðiþkeninden 12'si sayýsal (10 sürekli ve 2 ayrýk), 6 kategorik ve 3'dür.
+
+### Deðiþken incelemesi:
+
+**Number :** Uniq deðer
+
+**Name :** Uniq deðer
+
+**Type-1 :** pokemonun fiziksel özelliði
+
+**Type-2 :** pokemonun yeteneði (boþ deðerler var)
+
+**Total :** Pokémon'un tüm temel savaþ istatistiklerinin toplamý.
+        Kendisinden sonra gelen 6 deðiþkenin toplamý
+
+HP.
+
+Attack.
+
+Defense.
+
+Sp_Atk.
+
+Sp_Def.
+
+Speed.
+
+Bu altý deðiþken savaþ istatistikleri ile ilgilidir. Biz Totali kullanacaðýz.
+
+**Generation :**Pokémon'un serbest býrakýldýðý nesil. 
+             1 ile 6 arasýnda bir tam sayýdýr,
+             sayýsal ayrýk deðiþken.
+             
+**isLegendary.:** Pokémon'un efsanevi olup olmadýðýný belirten Boolean.
+              Karþýlaþýlmasý ve yakalanmasý gerçekten zor.
+              
+**Color:** pokemon renkleri 10 gruptur.
+       Black, Blue, Brown, Green, Grey, Pink, Purple, Red, White, ve Yellow.
+
+**hasGender.:** booleandýr. male or female. pokemonun cinsiyetini belirtir.
+
+**Pr_Male. :** pokemonun doðada erkek yada kadýn olarak görülme olasýlýðý
+
+**Egg_Group_1. :** 15 gruptan oluþur. Yumurtanýn özellikleridir. Amorf, Böcek, Aynen, Ejderha, Peri, Tarla, Uçan, Çimen, Ýnsan Gibi, Mineral, Canavar, Keþfedilmemiþ,
+Su_1, Su_2 ve Su_3.
+
+**Egg_Group_2. :** Pokémon türlerinde olduðu gibi, Pokémon da iki yumurta grubuna ait olabilir. iki gruba ait ise ikinci grubu bu sütunda.
+
+**hasMegaEvolution.: ** Bir Pokémon'un mega evrimleþip evrimleþmeyeceðini gösteren Boolean.
+
+**Height_m. :** Sürekli deðiþken. Boy.
+
+**Weight_kg. :** Sürekli deðiþken. Aðýrlýk.
+
+**Catch_Rate. :** Yakalama oraný. 3 ile 255 arasýnda sýnýrlandýrýlmýþtýr. Sürekli.
+
+**Body_Style. :** Pokémon'un vücut stili. 14 vücut stili kategorisi belirlenmiþtir
+
+
+### Import Data
+
+```{r message=FALSE, warning=FALSE}
+library(readr)
+pokemon <- read_csv("pokemon_alopez247.csv")
+knitr::kable(head(pokemon, 20))
+
+```
+```{r}
+colnames(pokemon)
+```
+
+
+Data da 6 sürekli deðiþkenden hesaplanmýþ Total deðiþkeni Savaþ gücü istatistiðini göstermektedir. Ben bu deðiþkeni kullanýp diðer deðiþkenleri datadan çýkartmak istiyorum.
+
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+library(magrittr)
+pokemon <- as.data.frame(pokemon)
+pokemon <- select(pokemon, -c("HP", "Attack", "Defense", "Sp_Atk", "Sp_Def", "Speed"))
+knitr::kable(head(pokemon, 20))
+```
+
+```{r message=FALSE, warning=FALSE}
+library(Amelia)
+missmap(pokemon, main = "Missing Observation", col = c("black", "purple"))
+```
+
+Yaptýðýmýz bu analizde datadaki 3 deðiþkende boþ gözlem deðerleri olduðu görülmektedir.
+Bu deðiþkenleri de datamýzdan çýkaralým.
+
+```{r message=FALSE, warning=FALSE}
+pokemon <- select(pokemon, -c("Egg_Group_2", "Type_2", "Pr_Male" ))
+knitr::kable(head(pokemon, 20))
+```
+
+```{r}
+summary(pokemon)
+```
+
+Kalan Deðiþkenlerimin özet istatistikleri yukarýdaki gibidir.
+
+```{r message=FALSE, warning=FALSE}
+attach(pokemon)
+
+Type_1 <- factor("Type_1")
+Color <- factor("Color")
+Egg_Group_1 <- factor("Egg_Group_1")
+Body_Style  <- factor("Body_Style")
+
+detach(pokemon)
+```
+
+
+
+```{r message=FALSE, warning=FALSE}
+par(mfrow=c(1,3))
+
+hist(pokemon$Height_m, col = rainbow(4:8))
+sunflowerplot(pokemon$Height_m, pch = "+", col = rainbow(30))
+boxplot(pokemon$Height_m)
+
+
+```
+
+```{r message=FALSE, warning=FALSE}
+par(mfrow=c(1,3))
+
+hist(pokemon$Weight_kg, col = rainbow(4:8))
+sunflowerplot(pokemon$Weight_kg, pch = "+", col = rainbow(30))
+boxplot(pokemon$Weight_kg)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+par(mfrow=c(1,3))
+
+hist(pokemon$Total, col = rainbow(4:8))
+sunflowerplot(pokemon$Total, pch = "+", col = rainbow(30))
+boxplot(pokemon$Total)
+```
+
+boy ve kilo ile ilgili deðiþkenlerim sað çarpýk daðýlýyor. bunun sebebinin aykýrý deðerden kaynaklandýðýný ikinci grafikten gördüm.
+Güç deðiþkenimse histogram grafiðinden bakýldýðýnda normal daðýlmaktadýr.
+
+## NORMALLÝK TESTÝ
+
+```{r}
+
+shapiro.test(x = pokemon$Total)
+
+```
+
+H0 : Total deðiþkeni ile Normal daðýlým arasýnda fark yoktur.
+
+H1 : Total deðiþkeni ile Normal daðýlým arasýnda fark vardýr.
+
+test sonucuna baktýðýmýzda p-value deðeri 0.05 den küçük olduðu için H0 hipotezi reddedilir.
+Normal Daðýlmýyor.
+
+## REGRESYON
+
+```{r}
+lm(pokemon$Total~pokemon$Height_m+pokemon$Weight_kg) %>% 
+  summary()
+```
+
+
+Yaptýðýmýz regresyon analizinde sonuçlara baktýðýmýz zamana
+**MODEL** : y = 357.81 + 32.16Height_m + 0.41Weight_kg
+model anlamlýdýr.
+hipotez testleri ve yorumu sonra ekleyeceðim.
+
+### Model Geliþtirme
+
+```{r}
+lm(pokemon$Total~pokemon$Height_m+pokemon$Weight_kg+pokemon$hasGender) %>% 
+  summary()
+```
+
+cinsiyet deðiþkeni bu model için anlamlýdýr.
+diðer deðiþkenler sabit tutulduðunda pokemonun kadýn olmasý 83.7 kat güç istatistiðini düþürür.
+
+```{r}
+lm(pokemon$Total~pokemon$Height_m+pokemon$Weight_kg+pokemon$hasGender+pokemon$Color) %>% 
+  summary()
+```
+
+modele renk deðiþkeni eklendiðinde renk deðiþkeninin tüm guruplarý için baðýmlý deðiþkeni 
+açýklamakta anlamsýz olduðunu görüyoruz.
+yani pokemonun renginin kazanma gücü istatistiðine etkisi yoktur.
+bu deðiþkeni çýkartýyorum
+
+```{r}
+lm(pokemon$Total~pokemon$Height_m+pokemon$Weight_kg+pokemon$hasGender+pokemon$Catch_Rate) %>% 
+  summary()
+```
+
+yakalanma oranýný modele eklediðimizde anlamlý olduðunu görüyoruz
+modele bakarak diðer deðiþkenler sabit tutulduðunda 
+pokemonun yakalanma oraný bir birim yükseldiðinde kazanma gücü istatistiði 0.8 kat düþer.
+
+```{r}
+lm(pokemon$Total~pokemon$Height_m+pokemon$Weight_kg+pokemon$hasGender+pokemon$hasMegaEvolution) %>% 
+  summary()
+```
+
+modele bakarak diðer deðiþkenler sabit tutulduðunda 
+pokemon evrimleþebilir türde olduðunda kazanma gücü istatistiði 65.04 kat artar.
+
+### VARYANS HOMOJENLÝÐÝ
+
+```{r message=FALSE, warning=FALSE}
+library(car)
+leveneTest(pokemon$Total~pokemon$Color)
+```
+
+Ho: homjendir.
+
+H1: homojen deðildir.
+
+Ho reddedilemez.
+
+### ANOVA 
+```{r}
+oneway.test(pokemon$Total~pokemon$Color, var.equal = T)
+```
+
+Ho: Renk Gruplarý arasýnda anlamlý bir fark yoktur.
+
+H1: Vardýr.
+
+Ho reddedilemez. renk gruplarý arasýnda savaþ kazanma istatistiði bakýmýndan bir fark yoktur.
+
+
+
+```{r warning=FALSE}
+leveneTest(pokemon$Total~pokemon$isLegendary)
+```
+
+
+Varyanslar eþit deðil.
+
+```{r}
+oneway.test(pokemon$Total~pokemon$isLegendary, var.equal = F)
+```
+
+pokemonun efsanevi olup olmadýðýný gösteren logical deðiþkenin iki grubu arasýnda çok büyük bir fark vardýr.
+
+
+ 
+## POKEMON KARÞILAÞTIRMALARI
+
+```{r}
+library(lattice)
+barchart(pokemon$Type_1, col = blues9)
+```
+
+```{r}
+rownames(pokemon) <- pokemon$Name
+View(pokemon)
+```
+
+```{r}
+table(as.character(pokemon$Type_1)) %>% 
+knitr::kable() 
+
+```
+ 
+```{r message=FALSE, warning=FALSE}
+library(grDevices)
+a <- filter(pokemon, (pokemon$Type_1 == "Electric")) 
+stars(a, key.loc = c(19, 2), draw.segments = TRUE, labels = a$Name)
+
+```
+
+```{r message=FALSE, warning=FALSE}
+
+a <- filter(pokemon, (pokemon$Type_1 == "Water")) 
+stars(a, key.loc = c(30, 2), draw.segments = TRUE, labels = a$Name)
+
+```
+```{r message=FALSE, warning=FALSE}
+
+a <- filter(pokemon, (pokemon$Type_1 == "Psychic")) 
+stars(a, key.loc = c(20, 2), draw.segments = TRUE, labels = a$Name)
+
+```
+
+
+
+```{r message=FALSE, warning=FALSE}
+
+a <- filter(pokemon, (pokemon$Type_1 == "Flying")) 
+stars(a, key.loc = c(20, 2), draw.segments = TRUE, labels = a$Name)
+
+```
+
+
